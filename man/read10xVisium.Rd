@@ -8,7 +8,8 @@ read10xVisium(
   samples = "",
   sample_id = paste0("sample", seq_along(samples)),
   type = c("HDF5", "sparse"),
-  images = c("fullres", "lowres", "hires", "detected", "aligned"),
+  data = c("filtered", "raw"),
+  images = "lowres",
   load = TRUE
 )
 }
@@ -25,7 +26,12 @@ ignored if \code{!is.null(names(samples))}}
 the type of format to read count data from
 (see \code{\link{read10xCounts}})}
 
-\item{images}{character vector specifying which images to include.}
+\item{data}{character string specifying whether to read in
+filtered (spots mapped to tissue) or raw data (all spots).}
+
+\item{images}{character vector specifying which images to include;
+valid options are a subset of "lowres" (default), 
+"hires", "aligned", "detected", "fullres".}
 
 \item{load}{logical; should the image(s) be loaded into memory
 as a \code{grob}? If FALSE, will store the path/URL instead.}
@@ -51,7 +57,10 @@ sample \cr
 · · · · |—matrix.mtx   \cr
 · · |—spatial \cr
 · · · · |—scalefactors_json.json    \cr
+· · · · |—tissue_hires_image.png    \cr
 · · · · |—tissue_lowres_image.png   \cr
+· · · · |—aligned_fiducials.jpg     \cr
+· · · · |—detected_tissue_image.jpg \cr
 · · · · |—tissue_positions_list.csv \cr
 }
 \examples{
@@ -66,8 +75,7 @@ list.files(samples[1])
 list.files(file.path(samples[1], "spatial"))
 list.files(file.path(samples[1], "raw_feature_bc_matrix"))
 
-(ve <- read10xVisium(samples, sample_ids, type="HDF5",
-  images = c("lowres"), load = FALSE))
+(ve <- read10xVisium(samples, sample_ids))
 
 # tabulate number of spots mapped to tissue
 table(

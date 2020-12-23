@@ -14,7 +14,11 @@
 #' @param type character string specifying 
 #'   the type of format to read count data from
 #'   (see \code{\link{read10xCounts}})
-#' @param images character vector specifying which images to include.
+#' @param data character string specifying whether to read in
+#'   filtered (spots mapped to tissue) or raw data (all spots).
+#' @param images character vector specifying which images to include;
+#'   valid options are a subset of "lowres" (default), 
+#'   "hires", "aligned", "detected", "fullres".
 #' @param load logical; should the image(s) be loaded into memory
 #'   as a \code{grob}? If FALSE, will store the path/URL instead.
 #'   
@@ -32,7 +36,10 @@
 #' · · · · |—matrix.mtx   \cr
 #' · · |—spatial \cr
 #' · · · · |—scalefactors_json.json    \cr
+#' · · · · |—tissue_hires_image.png    \cr
 #' · · · · |—tissue_lowres_image.png   \cr
+#' · · · · |—aligned_fiducials.jpg     \cr
+#' · · · · |—detected_tissue_image.jpg \cr
 #' · · · · |—tissue_positions_list.csv \cr
 #'
 #' @return a \code{\link{SpatialExperiment}}
@@ -51,8 +58,7 @@
 #' list.files(file.path(samples[1], "spatial"))
 #' list.files(file.path(samples[1], "raw_feature_bc_matrix"))
 #' 
-#' (ve <- read10xVisium(samples, sample_ids, type="HDF5",
-#'   images = c("lowres"), load = FALSE))
+#' (ve <- read10xVisium(samples, sample_ids))
 #' 
 #' # tabulate number of spots mapped to tissue
 #' table(
@@ -70,12 +76,13 @@
 #' @export
 read10xVisium <- function(samples="",
     sample_id=paste0("sample", seq_along(samples)),
-    type=c("HDF5", "sparse"),
-    images=c("fullres", "lowres", "hires", "detected", "aligned"),
-    load=TRUE)
+    type=c("HDF5", "sparse"), data=c("filtered", "raw"),
+    images="lowres", load=TRUE)
 {
     type <- match.arg(type)
-    imgs <- match.arg(images, several.ok=TRUE)
+    data <- match.arg(data)
+    imgs <- match.arg(images, several.ok=TRUE,
+        choices=c("fullres", "lowres", "hires", "detected", "aligned"))
 
     # check sample identifiers
     if (is.null(sids <- names(samples))) {
@@ -90,7 +97,7 @@ read10xVisium <- function(samples="",
     
     # setup file paths
     fn <- paste0(
-        "raw_feature_bc_matrix", 
+        data, "_feature_bc_matrix", 
         switch(type, HDF5=".h5", ""))
     counts <- file.path(samples, fn)
     
